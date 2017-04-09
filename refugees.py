@@ -10,6 +10,8 @@ csv_file_name_preprocessed = "normalized_refugees_dataset.csv"
 read_normalized = True
 months_sorted = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
 attributes = ['Country / territory of asylum/residence', 'Origin', 'Year', 'Month', 'Value']
+years = ((1999, "January"), (2017, "January"))
+
 
 class MonthData:
     def __init__(self, list_attributes):
@@ -73,6 +75,7 @@ class Refugees:
             values[attribute_value] = sum(values[attribute_value])
         return values
 
+
     # Return [("January", value1), ("Februari", value2), ...]
     def get_aggregated_value_per_month(self):
         aggregated_values = self.get_aggregated_value("month")
@@ -108,6 +111,7 @@ class Refugees:
 
     def example_curve_fitting(self):
         func = lambda x,a,b,c: a * np.exp(-b * x) + c
+        func2 = lambda x,a,b,c: a*np.exp(x,2) + b*x + c
 
         xdata = np.linspace(0, 4, 50)
         y = func(xdata, 2.5, 1.3, 0.5)
@@ -123,4 +127,4 @@ class Refugees:
 
 refugees = Refugees()
 
-print(refugees.get_aggregated_value("month", constraint_attribute_names=["origin","year"], constraint_values=["Afghanistan", 1999]))
+print(refugees.get_aggregated_value("month"))
