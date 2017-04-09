@@ -47,23 +47,33 @@ class Refugees:
         return data
 
     # Return { attribute_value_1: [value1, value2, ...], ...}
-    def get_values_per_attribute(self, attribute_name):
+    def get_values_per_attribute(self, attribute_name, constraint_attribute_names=None, constraint_values=None):
         result = {}
         for object in self.data:
             attribute_value = getattr(object, attribute_name)
-            if attribute_value not in result:
-                result[attribute_value] = []
-            result[attribute_value].append(object.value)
+            skip = False
+            if constraint_attribute_names is not None:
+                for i in range(len(constraint_attribute_names)):
+                    attr = getattr(object, constraint_attribute_names[i])
+                    t = constraint_values[i]
+                    y = attr != t
+                    if getattr(object, constraint_attribute_names[i]) != constraint_values[i]:
+                        skip = True
+            if not skip:
+                if attribute_value not in result:
+                    result[attribute_value] = []
+                result[attribute_value].append(object.value)
         return result
 
     # Return { attribute_value_1: total_value, ...}
-    def get_aggregated_value(self, attribute):
-        values = self.get_values_per_attribute(attribute)
+    # E.g. refugees.get_aggregated_value("month", constraint_attribute_names=["origin","year"], constraint_values=["Afghanistan", 1999])
+    def get_aggregated_value(self, attribute_name, constraint_attribute_names=None, constraint_values=None):
+        values = self.get_values_per_attribute(attribute_name, constraint_attribute_names, constraint_values)
         for attribute_value in values.keys():
             values[attribute_value] = sum(values[attribute_value])
         return values
 
-    # Return [("January", value1), ("Februari", value2), ...)]
+    # Return [("January", value1), ("Februari", value2), ...]
     def get_aggregated_value_per_month(self):
         aggregated_values = self.get_aggregated_value("month")
         return [(x, aggregated_values[x]) for x in months_sorted]
@@ -113,4 +123,4 @@ class Refugees:
 
 refugees = Refugees()
 
-print(refugees.export_csv())
+print(refugees.get_aggregated_value("month", constraint_attribute_names=["origin","year"], constraint_values=["Afghanistan", 1999]))
