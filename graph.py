@@ -2,23 +2,32 @@ import networkx as nx
 from refugees import MonthData
 
 fileName = "normalized_refugees_dataset.csv"
-month = "January"
 
-def graphA(fileName,month):
+months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
+
+def graphA(fileName):
+    N = {}
     file = open(fileName,"r")
     lines = file.readlines()
-    DG = nx.DiGraph()
+    lines.pop(0)
+    for year in range(1999, 2018):
+        for month in months:
+            if year == 2017 and month == "February" :
+                break
+            DG = nx.DiGraph()
+            N[(month,year)] = DG
+
+
     for line in lines:
         result = line.strip().split(",")
-        if month == result[3]:
-           node1 = result[1]
-           node2 = result[0]
-           weight = result[4]
-           DG.add_weighted_edges_from([(node1,node2,int(weight))])
-    return DG
+        node1 = result[1].strip("\"") + ": " + result[2].strip("\"") if len(result) == 6 else result[1]
+        node2 = result[0]
+        weight = result[4]
+        N[(result[3],int(result[2]))].add_weighted_edges_from([(node1,node2,int(weight))])
+    return N
 
 
 
 
-DG = graphA(fileName,month)
-print(DG.out_degree("Afghanistan",weight='weight'))
+N = graphA(fileName)
+print(N[("January", 2000)].in_degree("Greece",weight='weight'))

@@ -123,8 +123,3 @@ class Refugees:
         plt.plot(xdata, func(xdata, *popt), 'r-', label='fit')
         perr = sum(np.sqrt(np.diag(pcov)))
         plt.show()
-
-
-refugees = Refugees()
-
-print(refugees.get_aggregated_value("month"))
