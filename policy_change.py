@@ -10,9 +10,8 @@ class PolicyChange:
         self.temporal_network = temporal_network.get_temporal_network(fileName)
         #self.visualize_graph(self.temporal_network[("January",2003)])
 
-    def aggregate(self,month,start,DG):
-        m = temporal_network.months[month]
-        DG_temp = self.temporal_network[m, start[0]]
+    def aggregate(self,DG_temp,DG):
+
         list_of_edges = DG_temp.edges()
         for edge in list_of_edges:
             if DG.has_edge(edge[0], edge[1]):
@@ -32,20 +31,28 @@ class PolicyChange:
 
         if start[0] == end[0]:
             for month in range(month_number_start+1, month_number_end+1):
-                DG = self.aggregate( month, start, DG)
+                m = temporal_network.months[month]
+                DG_temp = self.temporal_network[m, start[0]]
+                DG = self.aggregate( DG_temp, DG)
 
         else :
             for year in range(start[0],end[0]+1) :
                 if year == start[0]:
                     for month in range(month_number_start+1, 12):
-                        DG = self.aggregate(month, start, DG)
+                        m = temporal_network.months[month]
+                        DG_temp = self.temporal_network[m, year]
+                        DG = self.aggregate(DG_temp, DG)
 
                 elif year == end[0]:
-                    for month in range(1, month_number_end+1):
-                        DG = self.aggregate(month, start, DG)
+                    for month in range(0, month_number_end+1):
+                        m = temporal_network.months[month]
+                        DG_temp = self.temporal_network[m, year]
+                        DG = self.aggregate(DG_temp, DG)
                 else:
-                    for month in range(1,12):
-                        DG = self.aggregate(month, start, DG)
+                    for month in range(0,12):
+                        m = temporal_network.months[month]
+                        DG_temp = self.temporal_network[m, year]
+                        DG = self.aggregate(DG_temp, DG)
 
         return DG
 
@@ -71,6 +78,7 @@ class PolicyChange:
     # Output: temporal graphs
     #   Format: { ("January", 2000): graph1, (February, 2000): graph2 ...}
     def get_policy_change_graphs(self, number_of_months):
+
         pass
 
     @staticmethod
@@ -106,3 +114,5 @@ class PolicyChange:
         plt.show()
 
 a = PolicyChange()
+DG = a.get_aggregated_graph((2000,"January"),(2002, "November"))
+print(DG["Afghanistan"])
