@@ -9,7 +9,11 @@ class PolicyChange:
     def __init__(self):
         self.temporal_network = temporal_network.get_temporal_network(fileName)
         a = self.get_distribution_outflow(self.temporal_network[("January",2003)])
+        b = self.get_distribution_outflow(self.temporal_network[("February",2003)])
         print(a["Afghanistan"])
+        print(b["Afghanistan"])
+        c = self.policy_change_graph(a,b)
+        print(c["Afghanistan"])
 
     # Input: start, end
     #     Format: start:(year, month), end:(year, month)
@@ -26,10 +30,12 @@ class PolicyChange:
             neighbors = graph[node]
             # Get the weights of each outgoing edge from $node, format: [(node1, weight), ..]
             distribution = [(n, neighbors[n]["weight"]) for n in neighbors.keys()]
-            total = float(sum([x[1] for x in distribution]))
+
             # Normalize by the total sum
+            total = float(sum([x[1] for x in distribution]))
             distribution = map(lambda x: (x[0], x[1]/total), distribution)
 
+            # Add the normalized weighted according the outflow to the new graph
             for node2 in distribution:
                 distribution_network.add_weighted_edges_from([(node, node2[0], node2[1])])
         return distribution_network
@@ -37,8 +43,33 @@ class PolicyChange:
 
     # Output: temporal graphs
     #   Formate: { ("January", 1999): graph, ...}
-    def get_policy_change_grpah(self):
+    def get_policy_change_graphs(self):
         pass
+
+    @staticmethod
+    def policy_change_graph(graph1, graph2):
+        graph1 = graph1.copy()
+        graph2 = graph2.copy()
+
+        # Input: [(node1,node2),...] Output: [(node1, node2, 0), ..]
+        add_zero_weights = lambda container: map(lambda x: (x[0], x[1], 0), container)
+
+        # Add zero weighted edges to the graphs such that both graphs contain the same edges
+        edges1 = set(graph1.edges())
+        edges2 = set(graph2.edges())
+        diff1 = add_zero_weights(list(edges1 - edges2))
+        diff2 = add_zero_weights(list(edges2 - edges1))
+        graph1.add_weighted_edges_from(diff2)
+        graph2.add_weighted_edges_from(diff1)
+
+        policy_change_graph = nx.DiGraph()
+        for edge in graph1.edges():
+            weight1 = graph1[edge[0]][edge[1]]["weight"]
+            weight2 = graph2[edge[0]][edge[1]]["weight"]
+            policy_change_graph.add_weighted_edges_from([(edge[0], edge[1], weight2 - weight1)])
+
+        return policy_change_graph
+
 
     @staticmethod
     #   Example: self.visualize_graph(self.temporal_network[("January",2003)])
