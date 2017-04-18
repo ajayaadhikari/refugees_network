@@ -13,6 +13,7 @@ def get_temporal_network(fileName):
             if year == 2017 and month == "February" :
                 break
             DG = nx.DiGraph()
+
             N[(month,year)] = DG
 
     for line in lines:
@@ -23,5 +24,10 @@ def get_temporal_network(fileName):
         N[(result[3],int(result[2]))].add_weighted_edges_from([(node1, node2, int(weight))])
     return N
 
-# N = graphA(fileName)
-# print(N[("January", 2000)].in_degree("Greece",weight='weight'))
+N = get_temporal_network("normalized_refugees_dataset.csv")
+#list_edges = N[("January", 2000)].edges();
+#for edge in list_edges:
+#    DG = N[("January", 2000)]
+#    print( DG[edge[0]][edge[1]]['weight'])
+   # print(edge[0])
+print(N[("January", 2000)].in_degree("Greece",weight='weight'))
