@@ -1,9 +1,12 @@
 import networkx as nx
+import temporal_network
+
+fileName = "normalized_refugees_dataset.csv"
 
 
 class PolicyChange:
     def __init__(self):
-        pass
+        self.temporal_network = temporal_network.get_temporal_network(fileName)
 
     # Input: start, end
     #     Format: start:(year, month), end:(year, month)
@@ -24,3 +27,5 @@ class PolicyChange:
     @staticmethod
     def visualize_graph(graph):
         pass
+
+a = PolicyChange()

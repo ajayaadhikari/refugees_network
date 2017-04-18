@@ -1,11 +1,9 @@
 import networkx as nx
-from refugees import MonthData
-
-fileName = "normalized_refugees_dataset.csv"
 
 months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
 
-def graphA(fileName):
+
+def get_temporal_network(fileName):
     N = {}
     file = open(fileName,"r")
     lines = file.readlines()
@@ -17,7 +15,6 @@ def graphA(fileName):
             DG = nx.DiGraph()
             N[(month,year)] = DG
 
-
     for line in lines:
         result = line.strip().split(",")
         node1 = result[1].strip("\"") + ": " + result[2].strip("\"") if len(result) == 6 else result[1]
@@ -26,8 +23,5 @@ def graphA(fileName):
         N[(result[3],int(result[2]))].add_weighted_edges_from([(node1,node2,int(weight))])
     return N
 
-
-
-
-N = graphA(fileName)
-print(N[("January", 2000)].in_degree("Greece",weight='weight'))
+# N = graphA(fileName)
+# print(N[("January", 2000)].in_degree("Greece",weight='weight'))
