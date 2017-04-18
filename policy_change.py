@@ -69,8 +69,8 @@ class PolicyChange:
         return distribution_network
 
     # Output: temporal graphs
-    #   Formate: { ("January", 1999): graph, ...}
-    def get_policy_change_graphs(self):
+    #   Format: { ("January", 2000): graph1, (February, 2000): graph2 ...}
+    def get_policy_change_graphs(self, number_of_months):
         pass
 
     @staticmethod
