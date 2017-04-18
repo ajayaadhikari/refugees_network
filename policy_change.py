@@ -12,6 +12,7 @@ class PolicyChange:
         #self.visualize_graph(self.temporal_network[("January",2003)])
 
 
+
     def aggregate(self,month,start,DG):
         m = temporal_network.months[month]
         DG_temp = self.temporal_network[m, start[0]]
@@ -59,7 +60,20 @@ class PolicyChange:
     # Output: graph
     #   The weights are the percentage of outflow
     def get_distribution_outflow(self, graph):
-        pass
+        distribution_network = nx.DiGraph()
+        nodes = graph.nodes()
+        for node in nodes:
+            neighbors = graph[node]
+            # Get the weights of each outgoing edge from $node, format: [(node1, weight), ..]
+            distribution = [(n, neighbors[n]["weight"]) for n in neighbors.keys()]
+            total = float(sum([x[1] for x in distribution]))
+            # Normalize by the total sum
+            distribution = map(lambda x: (x[0], x[1]/total), distribution)
+
+            for node2 in distribution:
+                distribution_network.add_weighted_edges_from([(node, node2[0], node2[1])])
+        return distribution_network
+
 
     # Output: temporal graphs
     #   Formate: { ("January", 1999): graph, ...}
@@ -67,6 +81,7 @@ class PolicyChange:
         pass
 
     @staticmethod
+    #   Example: self.visualize_graph(self.temporal_network[("January",2003)])
     def visualize_graph(graph):
         labels = {}
         [labels.update({x: x[:3].decode('utf-8')}) for x in graph.nodes()]
@@ -74,6 +89,3 @@ class PolicyChange:
         plt.show()
 
 a = PolicyChange()
-DG = a.get_aggregated_graph((2000,"January"),(2000,"November"))
-#print(DG.in_degree("Greece",weight='weight'))
-print(DG["Afghanistan"])
