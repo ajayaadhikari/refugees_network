@@ -1,5 +1,6 @@
 import networkx as nx
 import temporal_network
+import matplotlib.pyplot as plt
 
 fileName = "normalized_refugees_dataset.csv"
 
@@ -7,6 +8,8 @@ fileName = "normalized_refugees_dataset.csv"
 class PolicyChange:
     def __init__(self):
         self.temporal_network = temporal_network.get_temporal_network(fileName)
+
+        self.visualize_graph(self.temporal_network[("January",2003)])
 
     # Input: start, end
     #     Format: start:(year, month), end:(year, month)
@@ -16,7 +19,7 @@ class PolicyChange:
 
     # Output: graph
     #   The weights are the percentage of outflow
-    def get_distribution_outflow(self):
+    def get_distribution_outflow(self, graph):
         pass
 
     # Output: temporal graphs
@@ -26,6 +29,9 @@ class PolicyChange:
 
     @staticmethod
     def visualize_graph(graph):
-        pass
+        labels = {}
+        [labels.update({x: x[:3].decode('utf-8')}) for x in graph.nodes()]
+        nx.draw(graph, arrows=True, labels=labels)  # use spring layout
+        plt.show()
 
 a = PolicyChange()

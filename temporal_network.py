@@ -17,10 +17,10 @@ def get_temporal_network(fileName):
 
     for line in lines:
         result = line.strip().split(",")
-        node1 = result[1].strip("\"") + ": " + result[2].strip("\"") if len(result) == 6 else result[1]
+        node1 = result[1].strip("\"") + " " + result[2].strip("\"") if len(result) == 6 else result[1]
         node2 = result[0]
         weight = result[4]
-        N[(result[3],int(result[2]))].add_weighted_edges_from([(node1,node2,int(weight))])
+        N[(result[3],int(result[2]))].add_weighted_edges_from([(node1, node2, int(weight))])
     return N
 
 # N = graphA(fileName)
