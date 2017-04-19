@@ -82,18 +82,33 @@ class PolicyChange:
         N = {}
         for year in range(2000,2018):
             for month in temporal_network.months :
-                if month == "January":
-                    expected_graph = self.get_distribution_outflow(self.get_aggregated_graph((year-1,month),(year-1,"December")))
+                # divide the number of months with 12(=1year) in order to get how many years back you have to go for the aggregate network
+                years_back = number_of_months // 12
+                # the modulo indicates the months that you have to go back in time
+                months = number_of_months % 12
+                #no data before 1999
+                if year - years_back <= 1999:
+                    years_back = years_back - (1999 - (year - years_back))
+                    months = 0
+
+                month_number = temporal_network.months.index(month)
+                # if its negative means that we have to go back plus one year ,for example imagine we are in year 2001 - January and the number of months is 14
+                # in this case we want to go at 1999 - November
+                if month_number - months < 0 :
+                    years_back = years_back + 1
+
+                month_start = temporal_network.months[month_number - months]
+                print(month_start)
+                month_end = temporal_network.months[month_number - 1]
+                # no data after february 2017 so break
+                if year == 2017 and month == "February":
+                    break
+                else :
+                    expected_graph = self.get_distribution_outflow(self.get_aggregated_graph((year-years_back, month_start),(year-1 if month == "January" else year,month_end)))
                     real_graph = self.get_distribution_outflow(self.temporal_network[month,year])
                     policy_change_graph = self.policy_change_graph(expected_graph,real_graph)
                     N[(month, year)] = policy_change_graph
-                else :
-                    month_number = temporal_network.months.index(month)
-                    m = temporal_network.months[month_number-1]
-                    expected_graph = self.get_distribution_outflow(self.get_aggregated_graph((year - 1, month), (year, m)))
-                    real_graph = self.get_distribution_outflow(self.temporal_network[month, year])
-                    policy_change_graph = self.policy_change_graph(expected_graph, real_graph)
-                    N[(month, year)] = policy_change_graph
+
         return N
 
 
@@ -130,5 +145,5 @@ class PolicyChange:
         plt.show()
 
 a = PolicyChange()
-DG = a.get_policy_change_graphs(12)
-print(DG["Afghanistan"])
+N = a.get_policy_change_graphs(37)
+print(N[("January", 2015)]["Syrian Arab Rep."])
