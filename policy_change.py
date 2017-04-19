@@ -78,8 +78,23 @@ class PolicyChange:
     # Output: temporal graphs
     #   Format: { ("January", 2000): graph1, (February, 2000): graph2 ...}
     def get_policy_change_graphs(self, number_of_months):
+        N = {}
+        for year in range(2000,2018):
+            for month in temporal_network.months :
+                if month == "January":
+                    expected_graph = self.get_distribution_outflow(self.get_aggregated_graph((year-1,month),(year-1,"December")))
+                    real_graph = self.get_distribution_outflow(self.temporal_network[month,year])
+                    policy_change_graph = self.policy_change_graph(expected_graph,real_graph)
+                    N[(month, year)] = policy_change_graph
+                else :
+                    month_number = temporal_network.months.index(month)
+                    m = temporal_network.months[month_number-1]
+                    expected_graph = self.get_distribution_outflow(self.get_aggregated_graph((year - 1, month), (year, m)))
+                    real_graph = self.get_distribution_outflow(self.temporal_network[month, year])
+                    policy_change_graph = self.policy_change_graph(expected_graph, real_graph)
+                    N[(month, year)] = policy_change_graph
+        return N
 
-        pass
 
     @staticmethod
     def policy_change_graph(graph1, graph2):
@@ -114,5 +129,5 @@ class PolicyChange:
         plt.show()
 
 a = PolicyChange()
-DG = a.get_aggregated_graph((2000,"January"),(2002, "November"))
+DG = a.get_policy_change_graphs(12)
 print(DG["Afghanistan"])
