@@ -68,7 +68,8 @@ class PolicyChange:
 
             # Normalize by the total sum
             total = float(sum([x[1] for x in distribution]))
-            distribution = map(lambda x: (x[0], x[1]/total), distribution)
+            if total != 0:
+                distribution = map(lambda x: (x[0], x[1]/total), distribution)
 
             # Add the normalized weighted according the outflow to the new graph
             for node2 in distribution:
