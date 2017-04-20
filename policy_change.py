@@ -7,13 +7,15 @@ fileName = "normalized_refugees_dataset.csv"
 
 class PolicyChange:
     def __init__(self):
+        print("Start reading from file and building temporal network")
         self.temporal_network = temporal_network.get_temporal_network(fileName)
+        print("\tDone!!")
         self.number_of_months = 6
+        print("Start building temporal policy graphs using %s months to compute the expected distribution" % self.number_of_months)
         self.policy_graphs = self.get_policy_change_graphs(self.number_of_months)
-        #self.visualize_graph(self.temporal_network[("January",2003)])
+        print("\tDone !!!")
 
     def aggregate(self,DG_temp,DG):
-
         list_of_edges = DG_temp.edges()
         for edge in list_of_edges:
             if DG.has_edge(edge[0], edge[1]):
@@ -37,7 +39,7 @@ class PolicyChange:
                 DG_temp = self.temporal_network[m, start[0]]
                 DG = self.aggregate( DG_temp, DG)
 
-        else :
+        else:
             for year in range(start[0],end[0]+1) :
                 if year == start[0]:
                     for month in range(month_number_start+1, 12):
@@ -82,7 +84,7 @@ class PolicyChange:
     #   Format: { ("January", 2000): graph1, (February, 2000): graph2 ...}
     def get_policy_change_graphs(self, number_of_months):
         N = {}
-        for year in range(2000,2018):
+        for year in range(2000, 2018):
             for month in temporal_network.months:
                 # divide the number of months with 12(=1year) in order to get
                 # how many years back you have to go for the aggregate network
@@ -102,7 +104,6 @@ class PolicyChange:
                     years_back = years_back + 1
 
                 month_start = temporal_network.months[month_number - months]
-                print(month_start)
                 month_end = temporal_network.months[month_number - 1]
                 # no data after february 2017 so break
                 if year == 2017 and month == "February":
@@ -114,6 +115,7 @@ class PolicyChange:
                     real_graph = self.get_distribution_outflow(self.temporal_network[month,year])
                     policy_change_graph = self.policy_change_graph(expected_graph,real_graph)
                     N[(month, year)] = policy_change_graph
+            print("\tPolicy graphs done for year " + str(year))
 
         return N
 
@@ -187,5 +189,5 @@ class PolicyChange:
         plt.show()
 
 a = PolicyChange()
-N = a.get_policy_change_graphs(37)
-print(N[("January", 2015)]["Syrian Arab Rep."])
+#N = a.get_policy_change_graphs(37)
+#print(N[("January", 2015)]["Syrian Arab Rep."])
