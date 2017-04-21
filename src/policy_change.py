@@ -1,19 +1,37 @@
 import networkx as nx
 import temporal_network
 import matplotlib.pyplot as plt
+import pickle
+import os.path
 
-fileName = "normalized_refugees_dataset.csv"
+fileName = "../dataset/normalized_refugees_dataset.csv"
 
 
 class PolicyChange:
     def __init__(self):
-        print("Start reading from file and building temporal network")
-        self.temporal_network = temporal_network.get_temporal_network(fileName)
-        print("\tDone!!")
-        self.number_of_months = 6
-        print("Start building temporal policy graphs using %s months to compute the expected distribution" % self.number_of_months)
-        self.policy_graphs = self.get_policy_change_graphs(self.number_of_months)
-        print("\tDone !!!")
+        self.number_of_months = 12
+        self.load_policy_change_graphs()
+
+    def load_policy_change_graphs(self):
+        graph_path = '../dataset/policy_graphs_months_%s.pkl' % self.number_of_months
+        if os.path.isfile(graph_path):
+            print("Policy graphs already exists with %s months, retrieving now." % self.number_of_months)
+            with open(graph_path, 'rb') as input:
+                self.policy_graphs = pickle.load(input)
+            print("\tDone!!!")
+        else:
+            print("Start reading from file and building temporal network")
+            self.temporal_network = temporal_network.get_temporal_network(fileName)
+            print("\tDone!!")
+            print("Start building temporal policy graphs using %s months to compute the expected distribution" % self.number_of_months)
+            self.policy_graphs = self.get_policy_change_graphs(self.number_of_months)
+            print("\tDone!!!")
+            print("Saving graphs to file to avoid re-computation next time.")
+            self.save_policy_graphs()
+            print("\tDone!!!")
+
+    def save_policy_graphs(self):
+        pickle.dump(self.policy_graphs, open('../dataset/policy_graphs_months_%s.pkl' % self.number_of_months, 'wb'), pickle.HIGHEST_PROTOCOL)
 
     def aggregate(self,DG_temp,DG):
         list_of_edges = DG_temp.edges()
