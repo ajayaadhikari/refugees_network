@@ -169,6 +169,56 @@ class PolicyChange:
 # unless indicated otherwise
 # Use the $self.policy_graphs attribute
 
+
+
+    # Output format: {"Afghanistan": (0.6,0.4), ...}
+    @staticmethod
+    def positive_negative_change(policy_graph):
+        countries = policy_graph.nodes()
+        result = {}
+        for country in countries:
+            if policy_graph.in_degree(country) > policy_graph.out_degree(country):
+                result[country] = None
+                predecessors = policy_graph.predecessors(country)
+
+                sum_positive = 0
+                sum_negative = 0
+                for predecessor in predecessors:
+                    weight = policy_graph[predecessor][country]["weight"]
+                    if weight < 0:
+                        sum_negative += abs(weight)
+                    else:
+                        sum_positive += weight
+                result[country] = (sum_positive, sum_negative)
+        return result
+
+    # Output format: { ("January", 2000): {"Afghanistan": (0.6,0.4), ...}, ...}
+    def positive_negative_change_all(self):
+        time_periods = self.policy_graphs.keys()
+        result = {}
+        for time_period in time_periods:
+            result[time_period] = self.positive_negative_change(self.policy_graphs[time_period])
+        return result
+
+    # Output format: {"Afghanistan": [("January", 2000, (0.6,0.4)), ...], ...}
+    def positive_negative_change_per_country(self):
+        positive_negative_change_all = self.positive_negative_change_all()
+
+        flatten = lambda l: [item for sublist in l for item in sublist]
+        months = temporal_network.months
+        years = range(1999, 2017)
+        tuple_month_year = flatten(map(lambda year: map(lambda month: (month,year), months), years))
+
+        countries_result = {}
+        for month_year in tuple_month_year:
+            if month_year in positive_negative_change_all:
+                change_per_country = positive_negative_change_all[month_year]
+                for country in change_per_country.keys():
+                    if country not in countries_result:
+                        countries_result[country] = []
+                    countries_result[country].append((month_year[0], month_year[1], change_per_country[country]))
+        return countries_result
+
     # Remove the edges smaller than the given threshold from all the temporal policy graphs
     # Output Format: { ("January", 2000): graph1, (February, 2000): graph2 ...}
     def filter_weights(self, threshold):
@@ -197,7 +247,6 @@ class PolicyChange:
     def global_policy_change_(self):
         pass
 
-
     @staticmethod
     #   Example: self.visualize_graph(self.temporal_network[("January",2003)])
     def visualize_graph(graph):
@@ -206,6 +255,20 @@ class PolicyChange:
         nx.draw(graph, arrows=True, labels=labels)  # use spring layout
         plt.show()
 
-a = PolicyChange()
+############################################################################################################
+################################################ TESTS #####################################################
+############################################################################################################
+
+    def test_positive_negative_change(self):
+        graph = nx.DiGraph()
+        graph.add_weighted_edges_from([(1, 5, -0.2), (2, 5, -0.5), (3, 5, 0.4), (4, 5, 0.5)])
+        graph.add_weighted_edges_from([(11, 1, -0.6), (12, 1, -0.4), (13, 1, 0.3), (14, 1, 0.5)])
+
+        change = self.positive_negative_change(graph)
+        assert change[5] == (0.9, 0.7)
+        assert change[1] == (0.8, 1)
+        print("Positive_negative_change: Tests passed")
+
+a = PolicyChange().positive_negative_change_per_country()
 #N = a.get_policy_change_graphs(37)
 #print(N[("January", 2015)]["Syrian Arab Rep."])
