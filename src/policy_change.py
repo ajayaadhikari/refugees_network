@@ -9,7 +9,7 @@ fileName = "../dataset/normalized_refugees_dataset.csv"
 
 class PolicyChange:
     def __init__(self):
-        self.number_of_months = 3
+        self.number_of_months = 12
         self.load_policy_change_graphs()
 
     def load_policy_change_graphs(self):
@@ -182,10 +182,11 @@ class PolicyChange:
 
     # Output format: {"Afghanistan": (0.6,0.4), ...}
     @staticmethod
-    def positive_negative_change(policy_graph, original_graph):
+    def positive_negative_change(policy_graph, original_graph, weighted=True):
         countries = policy_graph.nodes()
         outflow_per_country = PolicyChange.get_outflow_per_country(original_graph)
         total_outflow = float(sum([outflow_per_country[country] for country in outflow_per_country.keys()]))
+
         result = {}
         for country in countries:
             if policy_graph.in_degree(country) > policy_graph.out_degree(country):
@@ -194,28 +195,31 @@ class PolicyChange:
 
                 sum_positive = 0
                 sum_negative = 0
+                count = 0.0
                 for predecessor in predecessors:
                     weight = policy_graph[predecessor][country]["weight"]
-                    if predecessor in outflow_per_country:
-                        normalized_weight = weight * outflow_per_country[predecessor]/total_outflow
-                        if normalized_weight < 0:
-                            sum_negative += abs(normalized_weight)
+                    if (predecessor in outflow_per_country) and (outflow_per_country[predecessor] > 200):
+                        count += 1
+                        if weighted is True:
+                            weight = weight * outflow_per_country[predecessor] / total_outflow
+                        if weight < 0:
+                            sum_negative += abs(weight)
                         else:
-                            sum_positive += normalized_weight
-                result[country] = (sum_positive, sum_negative)
+                            sum_positive += weight
+                result[country] = (sum_positive/count, sum_negative/count)
         return result
 
     # Output format: { ("January", 2000): {"Afghanistan": (0.6,0.4), ...}, ...}
-    def positive_negative_change_all(self):
+    def positive_negative_change_all(self, weighted=True):
         time_periods = self.policy_graphs.keys()
         result = {}
         for time_period in time_periods:
-            result[time_period] = self.positive_negative_change(self.policy_graphs[time_period], self.temporal_network[time_period])
+            result[time_period] = self.positive_negative_change(self.policy_graphs[time_period], self.temporal_network[time_period], weighted)
         return result
 
     # Output format: {"Afghanistan": [("January", 2000, (0.6,0.4)), ...], ...}
-    def positive_negative_change_per_country(self):
-        positive_negative_change_all = self.positive_negative_change_all()
+    def positive_negative_change_per_country(self, weighted=True):
+        positive_negative_change_all = self.positive_negative_change_all(weighted)
 
         flatten = lambda l: [item for sublist in l for item in sublist]
         months = temporal_network.months
@@ -232,9 +236,12 @@ class PolicyChange:
                     countries_result[country].append((month_year[0], month_year[1], change_per_country[country]))
         return countries_result
 
-    def write_positive_negetive_change_per_country_to_file(self):
+    def write_positive_negetive_change_per_country_to_file(self, weighted=True):
         change_per_country = self.positive_negative_change_per_country()
-        file = open("../output/policy_change_%s_months.csv" % self.number_of_months, "w")
+        if weighted:
+            file = open("../output/weighted_output/policy_change_%s_months.csv" % self.number_of_months, "w")
+        else:
+            file = open("../output/unweighted_output/policy_change_%s_months.csv" % self.number_of_months, "w")
         file.write("Country,Month,Year,positive_change,negative_change\n")
         for country in change_per_country.keys():
             data_country = change_per_country[country]
@@ -278,21 +285,3 @@ class PolicyChange:
         [labels.update({x: x[:3].decode('utf-8')}) for x in graph.nodes()]
         nx.draw(graph, arrows=True, labels=labels)  # use spring layout
         plt.show()
-
-############################################################################################################
-################################################ TESTS #####################################################
-############################################################################################################
-
-    def test_positive_negative_change(self):
-        graph = nx.DiGraph()
-        graph.add_weighted_edges_from([(1, 5, -0.2), (2, 5, -0.5), (3, 5, 0.4), (4, 5, 0.5)])
-        graph.add_weighted_edges_from([(11, 1, -0.6), (12, 1, -0.4), (13, 1, 0.3), (14, 1, 0.5)])
-
-        change = self.positive_negative_change(graph)
-        assert change[5] == (0.9, 0.7)
-        assert change[1] == (0.8, 1)
-        print("Positive_negative_change: Tests passed")
-
-PolicyChange().write_positive_negetive_change_per_country_to_file()
-#N = a.get_policy_change_graphs(37)
-#print(N[("January", 2015)]["Syrian Arab Rep."])
