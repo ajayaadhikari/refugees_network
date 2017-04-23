@@ -24,5 +24,8 @@ def get_temporal_network(fileName):
         N[(result[3],int(result[2]))].add_weighted_edges_from([(node1, node2, int(weight))])
     return N
 
-#N = get_temporal_network("normalized_refugees_dataset.csv")
+
+N = get_temporal_network("../dataset/normalized_refugees_dataset.csv")
 #print(N[("January", 2000)].in_degree("Greece",weight='weight'))
+
+print(N[("January", 2000)]["Greece"]["Canada"]["weight"])
