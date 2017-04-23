@@ -23,9 +23,15 @@ class PolicyChange:
             with open(graph_path, 'rb') as input:
                 self.policy_graphs = pickle.load(input)
             print("\tDone!!!")
+            print("Removing noise")
+            self.remove_noise_all()
+            print("\tDone!!!")
         else:
             print("Start building temporal policy graphs using %s months to compute the expected distribution" % self.number_of_months)
             self.policy_graphs = self.get_policy_change_graphs(self.number_of_months)
+            print("\tDone!!!")
+            print("Removing noise")
+            self.remove_noise_all()
             print("\tDone!!!")
             print("Saving graphs to file to avoid re-computation next time.")
             self.save_policy_graphs()
@@ -170,6 +176,36 @@ class PolicyChange:
 # unless indicated otherwise
 # Use the $self.policy_graphs attribute
 
+    @staticmethod
+    def get_time_period(time_period, num_of_months):
+        month, year = time_period
+        all_months = temporal_network.months
+        index_month = all_months.index(month) + 1
+        difference = index_month - num_of_months
+        if difference >= 0:
+            return all_months[difference], year
+        else:
+            return all_months[difference], year -1
+
+    @staticmethod
+    def remove_noise_graph(graph, aggregated_graph, num_of_months):
+        nodes = graph.nodes()
+        for node in nodes:
+            neighbors = graph[node]
+            for neighbor in neighbors.keys():
+                if not (node in aggregated_graph and neighbor in aggregated_graph[node]):
+                    graph.remove_edge(node, neighbor)
+                elif aggregated_graph[node][neighbor]["weight"]/num_of_months < 25:
+                    graph.remove_edge(node, neighbor)
+
+    def remove_noise_all(self):
+        time_periods = self.policy_graphs.keys()
+        flip = lambda x: (x[1],x[0])
+        for time_period in time_periods:
+            aggregated_graph = self.get_aggregated_graph(flip(self.get_time_period(time_period, self.number_of_months)),flip(time_period))
+            self.remove_noise_graph(self.policy_graphs[time_period], aggregated_graph, self.number_of_months)
+
+
     # Output format: {"Afghanistan": 456, ...}
     @staticmethod
     def get_outflow_per_country(original_graph):
@@ -285,3 +321,5 @@ class PolicyChange:
         [labels.update({x: x[:3].decode('utf-8')}) for x in graph.nodes()]
         nx.draw(graph, arrows=True, labels=labels)  # use spring layout
         plt.show()
+
+PolicyChange()
