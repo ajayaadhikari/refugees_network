@@ -9,7 +9,7 @@ fileName = "../dataset/normalized_refugees_dataset.csv"
 
 class PolicyChange:
     def __init__(self):
-        self.number_of_months = 12
+        self.number_of_months = 3
         self.load_policy_change_graphs()
 
     def load_policy_change_graphs(self):
@@ -285,6 +285,18 @@ class PolicyChange:
                 file.write("%s,%s,%s,%s,%s\n" % (country, item[0], item[1], item[2][0], item[2][1]))
         file.close()
 
+
+    def write_change_per_pair_to_file(self):
+        file = open("../output/per_pair_output/policy_change_%s_months.csv" % self.number_of_months, "w")
+        file.write("Destination,Origin,Month,Year,Change\n")
+        time_periods = self.policy_graphs.keys()
+        for time_period in time_periods:
+                for origin in self.policy_graphs[time_period]:
+                    for destination in self.policy_graphs[time_period][origin].keys():
+                        if origin != destination:
+                            file.write("%s,%s,%s,%s,%s\n" % (destination, origin, time_period[0],time_period[1], self.policy_graphs[time_period][origin][destination]["weight"]))
+
+        file.close()
 
     # Remove the edges smaller than the given threshold from all the temporal policy graphs
     # Output Format: { ("January", 2000): graph1, (February, 2000): graph2 ...}
