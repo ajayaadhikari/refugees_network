@@ -306,10 +306,10 @@ class PolicyChange:
         for time_period in time_periods:
             for country in self.policy_graphs[time_period]:
                 weights = []
-                weight = 0;
+                weight = 0.0;
 
-                predecessors = self.policy_graphs[time_period].predecessors(country)
                 if self.policy_graphs[time_period].in_degree(country) > self.policy_graphs[time_period].out_degree(country) :
+                    predecessors = self.policy_graphs[time_period].predecessors(country)
                     for predecessor in predecessors:
                         weight += self.policy_graphs[time_period][predecessor][country]["weight"]
                         weights.append(self.policy_graphs[time_period][predecessor][country]["weight"])
