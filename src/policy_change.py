@@ -173,36 +173,6 @@ class PolicyChange:
 # unless indicated otherwise
 # Use the $self.policy_graphs attribute
 
-    @staticmethod
-    def get_time_period(time_period, num_of_months):
-        month, year = time_period
-        all_months = temporal_network.months
-        index_month = all_months.index(month) + 1
-        difference = index_month - num_of_months
-        if difference >= 0:
-            return all_months[difference], year
-        else:
-            return all_months[difference], year -1
-
-    @staticmethod
-    def remove_noise_graph(graph, aggregated_graph, num_of_months):
-        nodes = graph.nodes()
-        for node in nodes:
-            neighbors = graph[node]
-            for neighbor in neighbors.keys():
-                if not (node in aggregated_graph and neighbor in aggregated_graph[node]):
-                    graph.remove_edge(node, neighbor)
-                elif aggregated_graph[node][neighbor]["weight"]/num_of_months < 25:
-                    graph.remove_edge(node, neighbor)
-
-    def remove_noise_all(self):
-        time_periods = self.policy_graphs.keys()
-        flip = lambda x: (x[1],x[0])
-        for time_period in time_periods:
-            aggregated_graph = self.get_aggregated_graph(flip(self.get_time_period(time_period, self.number_of_months)),flip(time_period))
-            self.remove_noise_graph(self.policy_graphs[time_period], aggregated_graph, self.number_of_months)
-
-
     # Output format: {"Afghanistan": 456, ...}
     @staticmethod
     def get_outflow_per_country(original_graph):
@@ -234,38 +204,6 @@ class PolicyChange:
     def remove_small_outflow_all(self):
         for time_period in self.policy_graphs.keys():
             self.remove_small_outflow(self.policy_graphs[time_period], self.temporal_network[time_period])
-
-            # Output format: {"Afghanistan": [("January", 2000, (0.6,0.4)), ...], ...}
-    def positive_negative_change_per_country(self, weighted=True):
-        positive_negative_change_all = self.positive_negative_change_all(weighted)
-
-        flatten = lambda l: [item for sublist in l for item in sublist]
-        months = temporal_network.months
-        years = range(1999, 2018)
-        tuple_month_year = flatten(map(lambda year: map(lambda month: (month,year), months), years))
-
-        countries_result = {}
-        for month_year in tuple_month_year:
-            if month_year in positive_negative_change_all:
-                change_per_country = positive_negative_change_all[month_year]
-                for country in change_per_country.keys():
-                    if country not in countries_result:
-                        countries_result[country] = []
-                    countries_result[country].append((month_year[0], month_year[1], change_per_country[country]))
-        return countries_result
-
-    def write_positive_negetive_change_per_country_to_file(self, weighted=True):
-        change_per_country = self.positive_negative_change_per_country()
-        if weighted:
-            file = open("../output/weighted_output/policy_change_%s_months.csv" % self.number_of_months, "w")
-        else:
-            file = open("../output/unweighted_output/policy_change_%s_months.csv" % self.number_of_months, "w")
-        file.write("Country,Month,Year,positive_change,negative_change\n")
-        for country in change_per_country.keys():
-            data_country = change_per_country[country]
-            for item in data_country:
-                file.write("%s,%s,%s,%s,%s\n" % (country, item[0], item[1], item[2][0], item[2][1]))
-        file.close()
 
     def write_change_per_pair_to_file(self):
         file = open("../output/per_pair_output/policy_change_%s_months.csv" % self.number_of_months, "w")
@@ -311,34 +249,6 @@ class PolicyChange:
                                                                    day_month_year,
                                                                    self.policy_graphs[time_period][origin][destination]["weight"]))
         file.close()
-
-    # Remove the edges smaller than the given threshold from all the temporal policy graphs
-    # Output Format: { ("January", 2000): graph1, (February, 2000): graph2 ...}
-    def filter_weights(self, threshold):
-        pass
-
-    # Draw a histogram of the outflow degree of the policy graph of the given specific month
-    # Input format: $month_year: (month, year)
-    def histogram_distribution_degree(self, month_year):
-        pass
-
-    # Draw a histogram of the weights of the policy graph of the given specific month
-    # Input format: $month_year: (month, year)
-    def histogram_distribution_weights(self, month_year):
-        pass
-
-    # Per node return the sum of the absolute value of the weights of the incoming edges
-    # This indicates whether a specific country had a drastic policy change during a specific month
-    # Input format: $month_year: (month, year)
-    # Output format: {"Afghanistan": 0.03, ...}
-    def local_policy_change(self, month_year):
-        pass
-
-    # Return the sum of all edges of all specific months
-    #  Output format: {("January", 2000): 1.7, ...}
-    # This gives an overview of the global change of policy
-    def global_policy_change_(self):
-        pass
 
     @staticmethod
     #   Example: self.visualize_graph(self.temporal_network[("January",2003)])
