@@ -23,15 +23,12 @@ class PolicyChange:
             with open(graph_path, 'rb') as input:
                 self.policy_graphs = pickle.load(input)
             print("\tDone!!!")
-            print("Removing noise")
-            #self.remove_noise_all()
-            print("\tDone!!!")
         else:
             print("Start building temporal policy graphs using %s months to compute the expected distribution" % self.number_of_months)
             self.policy_graphs = self.get_policy_change_graphs(self.number_of_months)
             print("\tDone!!!")
             print("Removing noise")
-            #self.remove_noise_all()
+            self.remove_small_outflow_all()
             print("\tDone!!!")
             print("Saving graphs to file to avoid re-computation next time.")
             self.save_policy_graphs()
@@ -218,42 +215,27 @@ class PolicyChange:
 
     # Output format: {"Afghanistan": (0.6,0.4), ...}
     @staticmethod
-    def positive_negative_change(policy_graph, original_graph, weighted=True):
+    def remove_small_outflow(policy_graph, original_graph):
         countries = policy_graph.nodes()
         outflow_per_country = PolicyChange.get_outflow_per_country(original_graph)
-        total_outflow = float(sum([outflow_per_country[country] for country in outflow_per_country.keys()]))
 
-        result = {}
         for country in countries:
-            if policy_graph.in_degree(country) > policy_graph.out_degree(country):
-                result[country] = None
-                predecessors = policy_graph.predecessors(country)
-
-                sum_positive = 0
-                sum_negative = 0
-                count = 0.0
-                for predecessor in predecessors:
-                    weight = policy_graph[predecessor][country]["weight"]
-                    if (predecessor in outflow_per_country) and (outflow_per_country[predecessor] > 200):
-                        count += 1
-                        if weighted is True:
-                            weight = weight * outflow_per_country[predecessor] / total_outflow
-                        if weight < 0:
-                            sum_negative += abs(weight)
-                        else:
-                            sum_positive += weight
-                result[country] = (sum_positive/count, sum_negative/count)
-        return result
+            if policy_graph.out_degree(country) > policy_graph.in_degree(country):
+                if country in outflow_per_country:
+                    total_outflow = outflow_per_country[country]
+                    if total_outflow < 200:
+                        policy_graph.remove_node(country)
+                        policy_graph.add_node(country)
+                else:
+                    policy_graph.remove_node(country)
+                    policy_graph.add_node(country)
 
     # Output format: { ("January", 2000): {"Afghanistan": (0.6,0.4), ...}, ...}
-    def positive_negative_change_all(self, weighted=True):
-        time_periods = self.policy_graphs.keys()
-        result = {}
-        for time_period in time_periods:
-            result[time_period] = self.positive_negative_change(self.policy_graphs[time_period], self.temporal_network[time_period], weighted)
-        return result
+    def remove_small_outflow_all(self):
+        for time_period in self.policy_graphs.keys():
+            self.remove_small_outflow(self.policy_graphs[time_period], self.temporal_network[time_period])
 
-    # Output format: {"Afghanistan": [("January", 2000, (0.6,0.4)), ...], ...}
+            # Output format: {"Afghanistan": [("January", 2000, (0.6,0.4)), ...], ...}
     def positive_negative_change_per_country(self, weighted=True):
         positive_negative_change_all = self.positive_negative_change_all(weighted)
 
@@ -287,14 +269,20 @@ class PolicyChange:
 
     def write_change_per_pair_to_file(self):
         file = open("../output/per_pair_output/policy_change_%s_months.csv" % self.number_of_months, "w")
-        file.write("Destination,Origin,Month,Year,Change\n")
+        file.write("Destination,Origin,Month,Year,Day/month/year,Change\n")
         time_periods = self.policy_graphs.keys()
         for time_period in time_periods:
                 for origin in self.policy_graphs[time_period]:
                     for destination in self.policy_graphs[time_period][origin].keys():
                         if origin != destination:
-                            file.write("%s,%s,%s,%s,%s\n" % (destination, origin, time_period[0],time_period[1], self.policy_graphs[time_period][origin][destination]["weight"]))
-
+                            month, year = time_period
+                            day_month_year = "1/%s/%s" % (temporal_network.months.index(month) + 1, year)
+                            file.write("%s,%s,%s,%s,%s,%s\n" % (destination,
+                                                                origin,
+                                                                month,
+                                                                year,
+                                                                day_month_year,
+                                                                self.policy_graphs[time_period][origin][destination]["weight"]))
         file.close()
 
     def write_change_per_pair_to_file_tableau_type(self):
