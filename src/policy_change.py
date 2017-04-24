@@ -10,7 +10,7 @@ fileName = "../dataset/normalized_refugees_dataset.csv"
 
 class PolicyChange:
     def __init__(self):
-        self.number_of_months = 3
+        self.number_of_months = 12
         self.load_policy_change_graphs()
 
     def load_policy_change_graphs(self):
