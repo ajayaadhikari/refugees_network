@@ -231,7 +231,7 @@ class PolicyChange:
     # write to file the average change and the standard deviation per country
     def write_average_change_and_std_per_country_to_file(self):
         file = open("../output/per_country_output/policy_change_%s_months.csv" % self.number_of_months, "w")
-        file.write("Country,Month,Year,Average Policy Change, Standard Deviation\n")
+        file.write("Country,Month,Year, Day/month/year, Average Policy Change, Standard Deviation\n")
         time_periods = self.policy_graphs.keys()
         for time_period in time_periods:
             for country in self.policy_graphs[time_period]:
@@ -241,13 +241,15 @@ class PolicyChange:
                 if self.policy_graphs[time_period].in_degree(country) > self.policy_graphs[time_period].out_degree(
                         country):
                     predecessors = self.policy_graphs[time_period].predecessors(country)
+                    month, year = time_period
+                    day_month_year = "1/%s/%s" % (temporal_network.months.index(month) + 1, year)
                     for predecessor in predecessors:
                         weight += self.policy_graphs[time_period][predecessor][country]["weight"]
                         weights.append(self.policy_graphs[time_period][predecessor][country]["weight"])
 
                     average_policy_change = weight / len(predecessors)
-                    file.write("%s,%s,%s,%s,%s\n" % (
-                    country, time_period[0], time_period[1], average_policy_change, np.std(weights)))
+
+                    file.write("%s,%s,%s,%s,%s, %s\n" % (country, time_period[0], time_period[1], day_month_year, average_policy_change, np.std(weights)))
         file.close()
 
     def write_change_per_pair_to_file_tableau_type(self):
