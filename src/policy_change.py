@@ -1,6 +1,7 @@
 import networkx as nx
 import temporal_network
 import matplotlib.pyplot as plt
+import numpy as np
 import pickle
 import os.path
 
@@ -9,7 +10,7 @@ fileName = "../dataset/normalized_refugees_dataset.csv"
 
 class PolicyChange:
     def __init__(self):
-        self.number_of_months = 12
+        self.number_of_months = 3
         self.load_policy_change_graphs()
 
     def load_policy_change_graphs(self):
@@ -22,6 +23,9 @@ class PolicyChange:
             print("Policy graphs already exists with %s months, retrieving now." % self.number_of_months)
             with open(graph_path, 'rb') as input:
                 self.policy_graphs = pickle.load(input)
+            print("\tDone!!!")
+            print("Removing noise")
+            self.remove_small_outflow_all()
             print("\tDone!!!")
         else:
             print("Start building temporal policy graphs using %s months to compute the expected distribution" % self.number_of_months)
@@ -222,6 +226,28 @@ class PolicyChange:
                                                                 self.policy_graphs[time_period][origin][destination]["weight"]))
         file.close()
 
+    # write to file the average change and the standard deviation per country
+    def write_average_change_and_std_per_country_to_file(self):
+        file = open("../output/per_country_output/policy_change_%s_months.csv" % self.number_of_months, "w")
+        file.write("Country,Month,Year,Average Policy Change, Standard Deviation\n")
+        time_periods = self.policy_graphs.keys()
+        for time_period in time_periods:
+            for country in self.policy_graphs[time_period]:
+                weights = []
+                weight = 0.0;
+
+                if self.policy_graphs[time_period].in_degree(country) > self.policy_graphs[time_period].out_degree(country) :
+                    predecessors = self.policy_graphs[time_period].predecessors(country)
+                    for predecessor in predecessors:
+                        weight += self.policy_graphs[time_period][predecessor][country]["weight"]
+                        weights.append(self.policy_graphs[time_period][predecessor][country]["weight"])
+
+                    average_policy_change = weight / len(predecessors)
+                    file.write("%s,%s,%s,%s,%s\n" % (country, time_period[0], time_period[1], average_policy_change, np.std(weights)))
+        file.close()
+
+
+
     def write_change_per_pair_to_file_tableau_type(self):
         file = open("../output/per_pair_output/policy_change_%s_months_tableau_type.csv" % self.number_of_months, "w")
         file.write("country1,country2,Destination-Origin,month,year,Day/month/year,Change\n")
@@ -257,4 +283,7 @@ class PolicyChange:
         nx.draw(graph, arrows=True, labels=labels)  # use spring layout
         plt.show()
 
-PolicyChange().write_change_per_pair_to_file_tableau_type()
+
+pg = PolicyChange()
+pg.write_average_change_and_std_per_country_to_file()
+
