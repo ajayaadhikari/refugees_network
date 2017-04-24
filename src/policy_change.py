@@ -9,7 +9,7 @@ fileName = "../dataset/normalized_refugees_dataset.csv"
 
 class PolicyChange:
     def __init__(self):
-        self.number_of_months = 3
+        self.number_of_months = 12
         self.load_policy_change_graphs()
 
     def load_policy_change_graphs(self):
@@ -24,14 +24,14 @@ class PolicyChange:
                 self.policy_graphs = pickle.load(input)
             print("\tDone!!!")
             print("Removing noise")
-            self.remove_noise_all()
+            #self.remove_noise_all()
             print("\tDone!!!")
         else:
             print("Start building temporal policy graphs using %s months to compute the expected distribution" % self.number_of_months)
             self.policy_graphs = self.get_policy_change_graphs(self.number_of_months)
             print("\tDone!!!")
             print("Removing noise")
-            self.remove_noise_all()
+            #self.remove_noise_all()
             print("\tDone!!!")
             print("Saving graphs to file to avoid re-computation next time.")
             self.save_policy_graphs()
@@ -285,7 +285,6 @@ class PolicyChange:
                 file.write("%s,%s,%s,%s,%s\n" % (country, item[0], item[1], item[2][0], item[2][1]))
         file.close()
 
-
     def write_change_per_pair_to_file(self):
         file = open("../output/per_pair_output/policy_change_%s_months.csv" % self.number_of_months, "w")
         file.write("Destination,Origin,Month,Year,Change\n")
@@ -296,6 +295,33 @@ class PolicyChange:
                         if origin != destination:
                             file.write("%s,%s,%s,%s,%s\n" % (destination, origin, time_period[0],time_period[1], self.policy_graphs[time_period][origin][destination]["weight"]))
 
+        file.close()
+
+    def write_change_per_pair_to_file_tableau_type(self):
+        file = open("../output/per_pair_output/policy_change_%s_months_tableau_type.csv" % self.number_of_months, "w")
+        file.write("country1,country2,Destination-Origin,month,year,Day/month/year,Change\n")
+        time_periods = self.policy_graphs.keys()
+        for time_period in time_periods:
+                for origin in self.policy_graphs[time_period]:
+                    for destination in self.policy_graphs[time_period][origin].keys():
+                        if origin != destination:
+                            month, year = time_period
+                            destination_origin = "%s-%s" % (destination,origin)
+                            day_month_year = "1/%s/%s" % (temporal_network.months.index(month) + 1, year)
+                            file.write("%s,%s,%s,%s,%s,%s,%s\n" % (destination,
+                                                                   origin,
+                                                                   destination_origin,
+                                                                   month,
+                                                                   year,
+                                                                   day_month_year,
+                                                                   self.policy_graphs[time_period][origin][destination]["weight"]))
+                            file.write("%s,%s,%s,%s,%s,%s,%s\n" % (origin,
+                                                                   destination,
+                                                                   destination_origin,
+                                                                   month,
+                                                                   year,
+                                                                   day_month_year,
+                                                                   self.policy_graphs[time_period][origin][destination]["weight"]))
         file.close()
 
     # Remove the edges smaller than the given threshold from all the temporal policy graphs
@@ -334,4 +360,4 @@ class PolicyChange:
         nx.draw(graph, arrows=True, labels=labels)  # use spring layout
         plt.show()
 
-PolicyChange()
+PolicyChange().write_change_per_pair_to_file_tableau_type()
