@@ -1,6 +1,7 @@
 import networkx as nx
 import temporal_network
 import matplotlib.pyplot as plt
+import numpy as np
 import pickle
 import os.path
 
@@ -9,7 +10,7 @@ fileName = "../dataset/normalized_refugees_dataset.csv"
 
 class PolicyChange:
     def __init__(self):
-        self.number_of_months = 3
+        self.number_of_months = 12
         self.load_policy_change_graphs()
 
     def load_policy_change_graphs(self):
@@ -295,8 +296,28 @@ class PolicyChange:
                     for destination in self.policy_graphs[time_period][origin].keys():
                         if origin != destination:
                             file.write("%s,%s,%s,%s,%s\n" % (destination, origin, time_period[0],time_period[1], self.policy_graphs[time_period][origin][destination]["weight"]))
-
         file.close()
+
+    # write to file the average change and the standard deviation per country
+    def write_average_change_and_std_per_country_to_file(self):
+        file = open("../output/per_country_output/policy_change_%s_months.csv" % self.number_of_months, "w")
+        file.write("Country,Month,Year,Average Policy Change, Standard Deviation\n")
+        time_periods = self.policy_graphs.keys()
+        for time_period in time_periods:
+            for country in self.policy_graphs[time_period]:
+                weights = []
+                weight = 0;
+
+                predecessors = self.policy_graphs[time_period].predecessors(country)
+                if self.policy_graphs[time_period].in_degree(country) > self.policy_graphs[time_period].out_degree(country) :
+                    for predecessor in predecessors:
+                        weight += self.policy_graphs[time_period][predecessor][country]["weight"]
+                        weights.append(self.policy_graphs[time_period][predecessor][country]["weight"])
+
+                    average_policy_change = weight / len(predecessors)
+                    file.write("%s,%s,%s,%s,%s\n" % (country, time_period[0], time_period[1], average_policy_change, np.std(weights)))
+        file.close()
+
 
     # Remove the edges smaller than the given threshold from all the temporal policy graphs
     # Output Format: { ("January", 2000): graph1, (February, 2000): graph2 ...}
@@ -334,4 +355,5 @@ class PolicyChange:
         nx.draw(graph, arrows=True, labels=labels)  # use spring layout
         plt.show()
 
-PolicyChange()
+pg = PolicyChange()
+pg.write_average_change_and_std_per_country_to_file()
