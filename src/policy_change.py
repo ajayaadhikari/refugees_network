@@ -9,8 +9,8 @@ fileName = "../dataset/normalized_refugees_dataset.csv"
 
 
 class PolicyChange:
-    def __init__(self):
-        self.number_of_months = 12
+    def __init__(self,number_or_months=3):
+        self.number_of_months = number_or_months
         self.load_policy_change_graphs()
 
     def load_policy_change_graphs(self):
@@ -203,6 +203,10 @@ class PolicyChange:
                 else:
                     policy_graph.remove_node(country)
                     policy_graph.add_node(country)
+            else:
+                neighbors = policy_graph.neighbors(country)
+                for neighbor in neighbors:
+                    policy_graph.remove_edge(country,neighbor)
 
     # Remove the countries with less than total 200 outgoing refugees per policy graph
     def remove_small_outflow_all(self):
@@ -236,7 +240,7 @@ class PolicyChange:
         for time_period in time_periods:
             for country in self.policy_graphs[time_period]:
                 weights = []
-                weight = 0.0;
+                weight = 0.0
 
                 if self.policy_graphs[time_period].in_degree(country) > self.policy_graphs[time_period].out_degree(
                         country):
@@ -284,8 +288,9 @@ class PolicyChange:
     @staticmethod
     def apply_threshold(policy_graph, threshold, use_all=True, sign=1):
         new_graph = nx.DiGraph()
+        count = 0
+        total = 0
         for node in policy_graph.nodes():
-            new_graph.add_node(node)
             for neighbor in policy_graph.neighbors(node):
                 weight = policy_graph[node][neighbor]["weight"]
                 if not use_all:
@@ -295,12 +300,13 @@ class PolicyChange:
                     weight = abs(weight)
 
                 if weight > threshold:
+                    count += 1
                     new_graph.add_edge(node, neighbor)
-
+                total += 1
         return new_graph
 
     def write_global_change_to_file(self):
-        threshold = 0.01
+        threshold = 0.05
         thresholded_graphs = lambda use_all, sign: [
             (t, self.apply_threshold(self.policy_graphs[t], threshold, use_all, sign))
             for t in self.policy_graphs.keys()]
@@ -356,5 +362,12 @@ class PolicyChange:
         nx.draw(graph, arrows=True, labels=labels)  # use spring layout
         plt.show()
 
-
-PolicyChange().write_global_change_to_file()
+def update_all():
+    for i in [3,6,12]:
+        print("Writing %s months to file." % i)
+        a = PolicyChange(i)
+        a.write_change_per_pair_to_file()
+        a.write_change_per_pair_to_file_tableau_type()
+        a.write_average_change_and_std_per_country_to_file()
+        a.write_global_change_to_file()
+        print("\tDone!!!")
