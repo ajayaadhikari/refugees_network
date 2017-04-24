@@ -183,7 +183,6 @@ class PolicyChange:
             result[node] = sum(weights)
         return result
 
-    # Output format: {"Afghanistan": (0.6,0.4), ...}
     @staticmethod
     def remove_small_outflow(policy_graph, original_graph):
         countries = policy_graph.nodes()
@@ -200,7 +199,7 @@ class PolicyChange:
                     policy_graph.remove_node(country)
                     policy_graph.add_node(country)
 
-    # Output format: { ("January", 2000): {"Afghanistan": (0.6,0.4), ...}, ...}
+    # Remove the countries with less than total 200 outgoing refugees per policy graph
     def remove_small_outflow_all(self):
         for time_period in self.policy_graphs.keys():
             self.remove_small_outflow(self.policy_graphs[time_period], self.temporal_network[time_period])
