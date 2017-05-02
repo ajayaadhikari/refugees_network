@@ -17,6 +17,7 @@ To make sure that the method used is justified, the policy graphs are evaluated 
 - In September 2015 the headline of The independent reads “Berlin says all Syrian asylum-seekers are welcome to remain”. [3]
 - Another big policy change that echoed in the media was in September 2015, when Hungary closed its borders to refugees. A Headline from the BBC states “Migrant crisis: Hungary's closed border leaves many stranded” [5]
 - In November 2016 Germany had a chance of heart, and does not encourage refugees to come. Headline of Daily Express states “'DON'T COME HERE!' Merkel migrant U-turn as Germany orders EU to SEND BACK boats to Africa”[4]
+
 The above  graph shows the estimated change of policy in Germany, Hungary and the Netherlands for refugees coming from Syria. All the mentioned known policy changes can be seen in the graph. To the best of our knowledge we did not find any policy changes in The Netherlands from 2015 to 2016 in the media. And even thought there was an increase of number of applications in this period to the Netherlands, our method correctly reports no change in policy.
 
 [1] Refugees Facts (http://www.unhcr.org/figures-at-a-glance.html)
