@@ -3,6 +3,8 @@
 ## Introduction
 In the recent years, the number of refugees globally has increased substantially, e.g. 21.3 million in 2015 [1]. This project tries to analyse the policy change of the countries that receive these refugees. The source dataset contains the number of asylum application per destination and origin country for each month (1999-2016) [2]. This dataset does not contain the policy change information directly. A novel method is applied to leverage this dataset and infer policy change. The results are evaluated against ground truths and analysed in different granularity.
 
+This project is part of the course **Modeling and Data Analysis in Complex Networks** (EE4389) in TU Delft. It was done in collaboration with  and [Ioannis Papadopoulos](https://github.com/John-Pap) and [Athanasios Dritsas](https://github.com/thanasisDr).
+
 ## Policy Graph Creation
 The original graph is as follows. Each node represents a country. The weights and the direction of the edges show the number of asylum application from a origin country to a destination country. This graph is created per specific month (1999-2016).
 Two pre-processing steps are applied. First, outgoing links from countries that provide less than 200 refugees are removed. Second, all weights are normalized to mitigate the seasons bias. Because there was an overall tendency of increase of outflow during the summer.
